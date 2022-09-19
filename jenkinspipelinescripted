@@ -3,7 +3,8 @@ node{
   properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '5', daysToKeepStr: '5', numToKeepStr: '')), [$class: 'JobLocalConfiguration', changeReasonComment: ''], pipelineTriggers([pollSCM('* * * * *')])])
 echo " The branch name is : ${env.BRANCH_NAME}"
 echo " The job name is : ${env.JOB_NAME}"
-
+try{
+  slacknotifications('STARTED')
   stage('checkoutcode'){
   git branch: 'development', credentialsId: 'd84593d4-7f03-4f32-871b-d942aeb4dfda', url: 'https://github.com/krishnarjuna0810/maven-web-application.git'
     }
@@ -26,8 +27,19 @@ echo " The job name is : ${env.JOB_NAME}"
        stage('stageDeployTomcatserver'){
         sshagent(['a850b564-689a-4196-a02b-e2c543769f4d']) {
         sh "scp -o   StrictHostKeyChecking=no target/maven-web-application.war ec2-user@172.31.9.48:/opt/apache-tomcat-9.0.65/webapps/"
-}
       }
+      }
+
+}//try block closing
+
+catch (e) {
+slacknotifications("FAILED")
+throw e
+}//CATCH 
+
+finally {
+slacknotifications('currentbuild.result')
+}
 
 }
 
@@ -54,5 +66,5 @@ def slacknotifications(String buildStatus = 'STARTED') {
   }
 
   // Send notifications
-  slackSend (color: colorCode, message: summary)
+  slackSend (color: colorCode, message: summary: channel: "#walmart")
 }
