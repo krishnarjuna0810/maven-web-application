@@ -33,7 +33,7 @@ try{
 }//try block closing
 
 catch (e) {
-slacknotifications('currentbuild.result')
+slacknotifications('Failed')
 throw e
 }//CATCH 
 
